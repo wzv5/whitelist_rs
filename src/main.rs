@@ -61,7 +61,8 @@ fn main() {
                 .route(web::get().to(get))
                 .route(web::post().to(post)),
         )
-    });
+    })
+    .workers(1);
     for i in cfg.listen.urls.iter() {
         s = s.bind(i).unwrap();
     }
