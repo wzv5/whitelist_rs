@@ -11,7 +11,7 @@
         "token": "aaa",
         "nginx_conf": "Z:\\whitelist.conf",
         "nginx_exe": "D:\\scoop\\home\\apps\\nginx\\current\\nginx.exe",
-        "remote_addr_var1": "my_real_ip",
+        "remote_addr_var": "my_real_ip",
         "result_var": "ip_whitelist",
         "timeout": 3600,
         "loop_delay": 15
