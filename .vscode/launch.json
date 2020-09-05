@@ -1,0 +1,42 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(Windows) 启动",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/whitelist_rs.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "APP_CONFIG",
+                    "value": "${workspaceFolder}/config.dev.json"
+                }
+            ],
+            "externalConsole": false,
+            "preLaunchTask": "rust: cargo build"
+        },
+        {
+            "name": "(Windows) 启动 release",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/release/whitelist_rs.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "APP_CONFIG",
+                    "value": "${workspaceFolder}/config.dev.json"
+                }
+            ],
+            "externalConsole": false,
+            "preLaunchTask": "rust: cargo build (release)"
+        }
+    ]
+}

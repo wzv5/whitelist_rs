@@ -1,0 +1,25 @@
+{
+    "listen": {
+        "urls": [
+            "127.0.0.1:8080",
+            "[::1]:8080"
+        ],
+        "path": "/a"
+    },
+    "whitelist": {
+        "token": "aaa",
+        "nginx_conf": "Z:\\whitelist.conf",
+        "nginx_exe": "D:\\scoop\\home\\apps\\nginx\\current\\nginx.exe",
+        "remote_addr_var1": "my_real_ip",
+        "result_var": "ip_whitelist",
+        "timeout": 3600,
+        "loop_delay": 15
+    },
+    "message": {
+        "bark": ""
+    },
+    "baidu_location": {
+        "ak": "",
+        "referrer": ""
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "listen": {
+        "urls": [
+            "127.0.0.1:8080",
+            "[::1]:8080"
+        ],
+        "path": "/a"
+    },
+    "whitelist": {
+        "token": "aaa",
+        "nginx_conf": "Z:\\whitelist.conf",
+        "nginx_exe": "D:\\scoop\\home\\apps\\nginx\\current\\nginx.exe"
+    }
+}

@@ -1,0 +1,17 @@
+[package]
+name = "whitelist_rs"
+version = "0.1.0"
+authors = ["wzv5 <wzv5@msn.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "*", features = ["json"] }
+tokio = { version = "*", features = [] }
+serde = "*"
+serde_json = "*"
+lru_time_cache = "*"
+url = "*"
+actix-web = "*"
+actix-rt = "*"
