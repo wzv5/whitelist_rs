@@ -19,12 +19,18 @@ use std::{
 struct MyAppData {
     service: Mutex<WhiteListService>,
     token: String,
+    allow_proxy: bool
 }
 
 fn main() {
     env_logger::init();
 
     let cfg = config::load_config().unwrap();
+
+    if cfg.listen.allow_proxy {
+        warn!("已开启代理支持，请注意防范远程地址伪造");
+    }
+
     let listcfg = WhiteListServiceConfig {
         nginx_conf: cfg.whitelist.nginx_conf,
         nginx_exe: cfg.whitelist.nginx_exe,
@@ -51,6 +57,7 @@ fn main() {
     let appdata = web::Data::new(MyAppData {
         service: Mutex::new(WhiteListService::new(listcfg, msgsvc, locsvc)),
         token: cfg.whitelist.token,
+        allow_proxy: cfg.listen.allow_proxy
     });
     let listen_path = cfg.listen.path;
 
@@ -101,12 +108,24 @@ async fn post(
     data: web::Data<MyAppData>,
     form: web::Form<HashMap<String, String>>,
 ) -> HttpResponse {
-    if let Some(addr) = req.peer_addr() {
+    let mut ip: Option<std::net::IpAddr> = None;
+    if data.allow_proxy {
+        if let Some(addr) = req.connection_info().remote() {
+            if let Ok(ip1) = addr.parse::<std::net::IpAddr>() {
+                ip = Some(ip1);
+            }
+        }
+    } else {
+        if let Some(addr) = req.peer_addr() {
+            ip = Some(addr.ip())
+        }
+    }
+    if let Some(ip) = ip {
         if form.get("token") == Some(&data.token) {
-            data.service.lock().unwrap().push(addr.ip());
+            data.service.lock().unwrap().push(ip);
             return "hello".into();
         } else {
-            warn!("未授权访问：{}", addr.ip());
+            warn!("未授权访问：{}", ip);
         }
     }
     HttpResponse::Forbidden().into()

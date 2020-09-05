@@ -4,7 +4,8 @@
             "127.0.0.1:8080",
             "[::1]:8080"
         ],
-        "path": "/a"
+        "path": "/a",
+        "allow_proxy": true
     },
     "whitelist": {
         "token": "aaa",

@@ -58,7 +58,14 @@ pub(crate) struct Config {
 #[derive(Deserialize)]
 pub(crate) struct ListenConfig {
     pub urls: Vec<String>,
-    pub path: String
+    pub path: String,
+
+    #[serde(default = "default_allow_proxy")]
+    pub allow_proxy: bool
+}
+
+fn default_allow_proxy() -> bool {
+    true
 }
 
 #[derive(Deserialize)]
