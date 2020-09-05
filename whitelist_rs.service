@@ -1,0 +1,14 @@
+[Unit]
+Description=whitelist_rs
+
+[Service]
+WorkingDirectory=/srv/www/whitelist_rs
+ExecStart=/srv/www/whitelist_rs/whitelist_rs
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+User=root
+Environment=RUST_LOG=info,whitelist_rs=debug
+
+[Install]
+WantedBy=multi-user.target

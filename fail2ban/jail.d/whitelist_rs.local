@@ -1,0 +1,8 @@
+[whitelist_rs]
+enabled = true
+backend = systemd
+filter = whitelist_rs
+port = http,https
+maxretry = 3
+bantime = 604800
+findtime  = 7200
