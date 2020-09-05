@@ -67,7 +67,7 @@ fn main() {
         s = s.bind(i).unwrap();
     }
 
-    let _ = actix_rt::System::new("").block_on(s.run());
+    actix_rt::System::new("").block_on(s.run()).unwrap();
 }
 
 async fn get(req: HttpRequest) -> impl Responder {
