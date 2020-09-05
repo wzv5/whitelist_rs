@@ -114,7 +114,7 @@ impl WhiteListServiceImpl {
         if newip.len() > 0 || delip.len() > 0 {
             if newip.len() > 0 {
                 let mut iplist = ipvec_to_strvec(&newip);
-                println!("新增 IP: \n\t{}", iplist.join("\n\t"));
+                debug!("新增 IP: \n\t{}", iplist.join("\n\t"));
                 if let Some(msgsvc) = &self.msgsvc {
                     let mut rt = tokio::runtime::Runtime::new().unwrap();
                     if let Some(locsvc) = &self.locsvc {
@@ -122,18 +122,21 @@ impl WhiteListServiceImpl {
                             .iter()
                             .map(|ip| {
                                 let mut ipstr = ip.to_string();
-                                if let Ok(loc) = rt.block_on(locsvc.lock().unwrap().get(ip)) {
-                                    ipstr = format!("{}({})", ipstr, loc);
+                                match rt.block_on(locsvc.lock().unwrap().get(ip)) {
+                                    Ok(loc) => ipstr = format!("{}({})", ipstr, loc),
+                                    Err(err) => error!("获取 {} 的位置失败: {}", ipstr, err)
                                 }
                                 ipstr
                             })
                             .collect();
                     }
-                    let _ = rt.block_on(msgsvc.send(&iplist.join("; ")));
+                    if let Err(err) = rt.block_on(msgsvc.send(&iplist.join("; "))) {
+                        error!("发送消息失败: {}", err);
+                    }
                 }
             }
             if delip.len() > 0 {
-                println!(
+                debug!(
                     "删除 IP: \n\t{}",
                     delip
                         .iter()
@@ -149,9 +152,9 @@ impl WhiteListServiceImpl {
 
     fn on_list_changed(&self, list: &Vec<IpAddr>) {
         if list.len() > 0 {
-            println!("当前列表:\n\t{}", ipvec_to_strvec(list).join("\n\t"));
+            info!("当前列表:\n\t{}", ipvec_to_strvec(list).join("\n\t"));
         } else {
-            println!("当前列表: 【空】");
+            info!("当前列表: 【空】");
         }
 
         let mut s = String::new();
@@ -164,10 +167,10 @@ impl WhiteListServiceImpl {
             s.push_str(&format!("{} 1;\n", i.to_string()));
         }
         s.push_str("}\n");
-        //println!("{}", s);
+        debug!("写出配置:\n{}", s);
 
         if let Err(err) = std::fs::write(&self.config.nginx_conf, s) {
-            println!("写出配置文件失败: {}", err);
+            error!("写出配置文件失败: {}", err);
             return;
         }
 
@@ -180,12 +183,12 @@ impl WhiteListServiceImpl {
             .spawn();
         let status = p.and_then(|mut p| p.wait());
         if let Err(err) = status {
-            println!("创建进程失败: {}", err);
+            error!("创建进程失败: {}", err);
             return;
         } else {
             let status = status.unwrap();
             if !status.success() {
-                println!("新的配置文件测试失败 [{}]", status);
+                error!("新的配置文件测试失败: {}", status);
                 return;
             }
         }
@@ -197,17 +200,17 @@ impl WhiteListServiceImpl {
             .spawn();
         let status = p.and_then(|mut p| p.wait());
         if let Err(err) = status {
-            println!("创建进程失败: {}", err);
+            error!("创建进程失败: {}", err);
             return;
         } else {
             let status = status.unwrap();
             if !status.success() {
-                println!("刷新配置失败 [{}]", status);
+                error!("刷新配置失败: {}", status);
                 return;
             }
         }
 
-        println!("已刷新配置");
+        info!("已刷新配置");
     }
 }
 

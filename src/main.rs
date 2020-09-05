@@ -1,15 +1,19 @@
 extern crate actix_rt;
 extern crate actix_web;
+extern crate env_logger;
 extern crate tokio;
+#[macro_use]
+extern crate log;
 
 mod config;
 mod service;
 
-use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use service::*;
 use std::{
+    collections::HashMap,
     sync::{Arc, Mutex},
-    time::Duration, collections::HashMap,
+    time::Duration,
 };
 
 struct MyAppData {
@@ -18,6 +22,8 @@ struct MyAppData {
 }
 
 fn main() {
+    env_logger::init();
+
     let cfg = config::load_config().unwrap();
     let listcfg = WhiteListServiceConfig {
         nginx_conf: cfg.whitelist.nginx_conf,
@@ -46,10 +52,10 @@ fn main() {
         service: Mutex::new(WhiteListService::new(listcfg, msgsvc, locsvc)),
         token: cfg.whitelist.token,
     });
-    let listen_path = cfg.listen.path.clone();
+    let listen_path = cfg.listen.path;
 
     let mut s = HttpServer::new(move || {
-        App::new().service(
+        App::new().wrap(middleware::Logger::default()).service(
             web::resource(&listen_path)
                 .app_data(appdata.clone())
                 .route(web::get().to(get))
@@ -58,10 +64,9 @@ fn main() {
     });
     for i in cfg.listen.urls.iter() {
         s = s.bind(i).unwrap();
-        println!("监听于 {}", i);
     }
 
-    let _ = actix_rt::System::new("").block_on(async { s.run().await });
+    let _ = actix_rt::System::new("").block_on(s.run());
 }
 
 async fn get(req: HttpRequest) -> impl Responder {
@@ -85,7 +90,9 @@ async fn get(req: HttpRequest) -> impl Responder {
 "#,
         req.path()
     );
-    HttpResponse::Ok().content_type("text/html; charset=utf-8").body(html)
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(html)
 }
 
 async fn post(
@@ -97,6 +104,8 @@ async fn post(
         if form.get("token") == Some(&data.token) {
             data.service.lock().unwrap().push(addr.ip());
             return "hello".into();
+        } else {
+            warn!("未授权访问：{}", addr.ip());
         }
     }
     HttpResponse::Forbidden().into()

@@ -16,6 +16,10 @@
                 {
                     "name": "APP_CONFIG",
                     "value": "${workspaceFolder}/config.dev.json"
+                },
+                {
+                    "name": "RUST_LOG",
+                    "value": "info,whitelist_rs=debug"
                 }
             ],
             "externalConsole": false,
@@ -33,6 +37,10 @@
                 {
                     "name": "APP_CONFIG",
                     "value": "${workspaceFolder}/config.dev.json"
+                },
+                {
+                    "name": "RUST_LOG",
+                    "value": "info,whitelist_rs=debug"
                 }
             ],
             "externalConsole": false,

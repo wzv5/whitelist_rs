@@ -32,7 +32,7 @@ impl BaiduLocationService {
         }
         let mut cache = self.cache.lock().unwrap();
         if let Some(addr) = cache.get(ip) {
-            println!("从缓存获取 {} 的位置为 {}", ip, addr);
+            debug!("从缓存获取 {} 的位置为 {}", ip, addr);
             return Ok(addr.into());
         }
         let client = reqwest::Client::new();
@@ -45,7 +45,7 @@ impl BaiduLocationService {
         let data: serde_json::Value = resp.json().await?;
         if data["status"].as_i64() == Some(0) {
             if let Some(addr) = data["content"]["address"].as_str() {
-                println!("联网获取 {} 的位置为 {}", ip, addr);
+                debug!("联网获取 {} 的位置为 {}", ip, addr);
                 cache.insert(ip.clone(), addr.into());
                 return Ok(addr.into());
             }

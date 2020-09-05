@@ -19,6 +19,7 @@ impl MessageService {
         if msg.is_empty() || self.config.bark.is_empty() {
             return Err("参数错误".into());
         }
+        debug!("发送消息: {}", msg);
         let url = format!(
             "{}/{}",
             self.config.bark,

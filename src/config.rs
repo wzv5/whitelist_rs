@@ -36,7 +36,7 @@ pub(crate) fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
         return Err("找不到配置文件".into());
     }
     let p = p.unwrap();
-    println!("配置文件: {}", p.display());
+    info!("配置文件: {}", p.display());
     let cfgfile = std::fs::File::open(p)?;
     let data: Config = serde_json::from_reader(cfgfile)?;
     Ok(data)
