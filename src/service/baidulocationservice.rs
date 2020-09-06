@@ -42,7 +42,7 @@ impl BaiduLocationService {
             .query(&[("ak", &self.config.ak), ("ip", &ip.to_string())])
             .timeout(std::time::Duration::from_secs(15));
         let resp = req.send().await?;
-        let data: serde_json::Value = resp.json().await?;
+        let data: serde_json::Value = serde_json::from_str(&resp.text().await?)?;
         if data["status"].as_i64() == Some(0) {
             if let Some(addr) = data["content"]["address"].as_str() {
                 debug!("联网获取 {} 的位置为 {}", ip, addr);
