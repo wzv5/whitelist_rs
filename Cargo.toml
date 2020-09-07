@@ -17,3 +17,7 @@ actix-web = "2.0.0"
 actix-rt = "1.1.1"
 log = "0.4.11"
 env_logger = "0.7.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
