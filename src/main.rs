@@ -111,8 +111,10 @@ async fn post(
     let mut ip: Option<std::net::IpAddr> = None;
     if data.allow_proxy {
         if let Some(addr) = req.connection_info().remote() {
-            if let Ok(ip1) = addr.parse::<std::net::IpAddr>() {
-                ip = Some(ip1);
+            if let Ok(addr) = addr.parse::<std::net::SocketAddr>() {
+                ip = Some(addr.ip());
+            } else if let Ok(addr) = addr.parse::<std::net::IpAddr>() {
+                ip = Some(addr);
             }
         }
     } else {
