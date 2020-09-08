@@ -85,6 +85,12 @@ pub(crate) struct WhiteListConfig {
 
     #[serde(default = "default_loop_delay")]
     pub loop_delay: u32,
+
+    #[serde(default)]
+    pub ipv4_prefixlen: u8,
+
+    #[serde(default)]
+    pub ipv6_prefixlen: u8
 }
 
 fn default_remote_addr_var() -> String {

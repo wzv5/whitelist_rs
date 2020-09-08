@@ -52,7 +52,9 @@
         "remote_addr_var": "my_real_ip",
         "result_var": "ip_whitelist",
         "timeout": 3600,
-        "loop_delay": 15
+        "loop_delay": 15,
+        "ipv4_prefixlen": 0,
+        "ipv6_prefixlen": 0
     },
     "message": {
         "bark": ""
@@ -71,9 +73,11 @@
 3. `result_var`：nginx 配置文件中保存结果的变量名，默认为 `ip_whitelist`，如果 `remote_addr` 在白名单中，该变量值为 `1`
 4. `timeout`：成功提交后保留多久，单位为秒，默认 `3600`
 5. `loop_delay`：多久检查一次列表，为了避免频繁重载 nginx 配置，提交成功和过期都不是实时的，默认为 `15`
-6. `bark`：消息通知接口，不含最后的 `/`
-7. `ak`：百度地图 API，用于获取 IP 的地理位置，仅在设置了 `bark` 、发送消息时使用
-8. `referrer`：调用百度地图 API 时的 referrer，参见百度地图 API 文档的来源白名单
+6. `ipv4_prefixlen`：成功提交后，把该范围内的 IP 都加入白名单，默认为 `0`，等同于 `32`
+7. `ipv6_prefixlen`：同上
+8. `bark`：消息通知接口，不含最后的 `/`
+9. `ak`：百度地图 API，用于获取 IP 的地理位置，仅在设置了 `bark` 、发送消息时使用
+10. `referrer`：调用百度地图 API 时的 referrer，参见百度地图 API 文档的来源白名单
 
 ## 开启日志
 

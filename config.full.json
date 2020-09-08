@@ -14,7 +14,9 @@
         "remote_addr_var": "my_real_ip",
         "result_var": "ip_whitelist",
         "timeout": 3600,
-        "loop_delay": 15
+        "loop_delay": 15,
+        "ipv4_prefixlen": 0,
+        "ipv6_prefixlen": 0
     },
     "message": {
         "bark": ""

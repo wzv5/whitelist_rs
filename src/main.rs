@@ -38,6 +38,8 @@ fn main() {
         result_var: cfg.whitelist.result_var,
         timeout: Duration::from_secs(cfg.whitelist.timeout.into()),
         loop_delay: Duration::from_secs(cfg.whitelist.loop_delay.into()),
+        ipv4_prefixlen: cfg.whitelist.ipv4_prefixlen,
+        ipv6_prefixlen: cfg.whitelist.ipv6_prefixlen
     };
     let mut msgsvc: Option<Arc<MessageService>> = None;
     let mut locsvc: Option<Arc<Mutex<BaiduLocationService>>> = None;

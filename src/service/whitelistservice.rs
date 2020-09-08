@@ -1,7 +1,7 @@
 use super::{BaiduLocationService, MessageService};
 use std::{
     collections::HashMap,
-    net::IpAddr,
+    net::{IpAddr, Ipv4Addr, Ipv6Addr},
     sync::{mpsc, Arc, Mutex},
     thread,
     time::{Duration, Instant},
@@ -15,6 +15,8 @@ pub struct WhiteListServiceConfig {
     pub result_var: String,
     pub timeout: Duration,
     pub loop_delay: Duration,
+    pub ipv4_prefixlen: u8,
+    pub ipv6_prefixlen: u8,
 }
 
 enum Message {
@@ -124,7 +126,7 @@ impl WhiteListServiceImpl {
                                 let mut ipstr = ip.to_string();
                                 match rt.block_on(locsvc.lock().unwrap().get(ip)) {
                                     Ok(loc) => ipstr = format!("{}({})", ipstr, loc),
-                                    Err(err) => error!("获取 {} 的位置失败: {}", ipstr, err)
+                                    Err(err) => error!("获取 {} 的位置失败: {}", ipstr, err),
                                 }
                                 ipstr
                             })
@@ -151,8 +153,9 @@ impl WhiteListServiceImpl {
     }
 
     fn on_list_changed(&self, list: &Vec<IpAddr>) {
+        let list = self.ipvec_with_prefix(list);
         if list.len() > 0 {
-            info!("当前列表:\n\t{}", ipvec_to_strvec(list).join("\n\t"));
+            info!("当前列表:\n\t{}", list.join("\n\t"));
         } else {
             info!("当前列表: 【空】");
         }
@@ -164,7 +167,7 @@ impl WhiteListServiceImpl {
         ));
         s.push_str("default 0;\n");
         for i in list {
-            s.push_str(&format!("{} 1;\n", i.to_string()));
+            s.push_str(&format!("{} 1;\n", i));
         }
         s.push_str("}\n");
         debug!("写出配置:\n{}", s);
@@ -212,8 +215,39 @@ impl WhiteListServiceImpl {
 
         info!("已刷新配置");
     }
+
+    fn ipvec_with_prefix(&self, v: &Vec<IpAddr>) -> Vec<String> {
+        v.iter()
+            .map(|ip| match ip {
+                IpAddr::V4(ip) => ipv4_to_cidr(ip, self.config.ipv4_prefixlen),
+                IpAddr::V6(ip) => ipv6_to_cidr(ip, self.config.ipv6_prefixlen),
+            })
+            .collect()
+    }
 }
 
 fn ipvec_to_strvec(v: &Vec<IpAddr>) -> Vec<String> {
     v.iter().map(|ip| ip.to_string()).collect()
+}
+
+fn ipv4_to_cidr(ip: &Ipv4Addr, prefixlen: u8) -> String {
+    if prefixlen == 0 || prefixlen == 32 {
+        return ip.to_string();
+    }
+    let mut ipu32 = u32::from_be_bytes(ip.octets());
+    let zerolen = 32 - prefixlen;
+    ipu32 = ipu32 >> zerolen << zerolen;
+    let ip4 = Ipv4Addr::from(ipu32);
+    format!("{}/{}", ip4, prefixlen)
+}
+
+fn ipv6_to_cidr(ip: &Ipv6Addr, prefixlen: u8) -> String {
+    if prefixlen == 0 || prefixlen == 128 {
+        return ip.to_string();
+    }
+    let mut ipu128 = u128::from_be_bytes(ip.octets());
+    let zerolen = 128 - prefixlen;
+    ipu128 = ipu128 >> zerolen << zerolen;
+    let ip6 = Ipv6Addr::from(ipu128);
+    format!("{}/{}", ip6, prefixlen)
 }
