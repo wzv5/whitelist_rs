@@ -112,11 +112,11 @@ async fn post(
 ) -> HttpResponse {
     let mut ip: Option<std::net::IpAddr> = None;
     if data.allow_proxy {
-        if let Some(addr) = req.connection_info().remote() {
-            if let Ok(addr) = addr.parse::<std::net::SocketAddr>() {
-                ip = Some(addr.ip());
-            } else if let Ok(addr) = addr.parse::<std::net::IpAddr>() {
+        if let Some(addr) = req.connection_info().realip_remote_addr() {
+            if let Ok(addr) = addr.parse::<std::net::IpAddr>() {
                 ip = Some(addr);
+            } else if let Ok(addr) = addr.parse::<std::net::SocketAddr>() {
+                ip = Some(addr.ip());
             }
         }
     } else {
