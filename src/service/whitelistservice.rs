@@ -1,3 +1,5 @@
+extern crate tokio;
+
 use super::{BaiduLocationService, MessageService};
 use std::{
     collections::HashMap,
@@ -46,9 +48,12 @@ impl WhiteListService {
         };
         WhiteListService {
             handle: Some(thread::spawn(move || {
-                // 启动时写出一个空配置
-                inner.on_list_changed(&vec![]);
-                inner.run();
+                let mut rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async move {
+                    // 启动时写出一个空配置
+                    inner.on_list_changed(&vec![]);
+                    inner.run().await;
+                });
             })),
             sender: s,
         }
@@ -82,7 +87,7 @@ struct WhiteListServiceImpl {
 }
 
 impl WhiteListServiceImpl {
-    fn run(&mut self) {
+    async fn run(&mut self) {
         loop {
             thread::sleep(self.config.loop_delay);
             while let Ok(msg) = self.receiver.try_recv() {
@@ -91,7 +96,7 @@ impl WhiteListServiceImpl {
                     Message::Push(ip) => self.push(ip),
                 }
             }
-            self.on_timer();
+            self.on_timer().await;
         }
     }
 
@@ -99,7 +104,7 @@ impl WhiteListServiceImpl {
         self.list.insert(ip, Instant::now() + self.config.timeout);
     }
 
-    fn on_timer(&mut self) {
+    async fn on_timer(&mut self) {
         self.list.retain(|_, t| &Instant::now() < t);
         let curlist: Vec<IpAddr> = self.list.keys().cloned().collect();
         let newip: Vec<IpAddr> = curlist
@@ -118,21 +123,17 @@ impl WhiteListServiceImpl {
                 let mut iplist = ipvec_to_strvec(&newip);
                 debug!("新增 IP: \n\t{}", iplist.join("\n\t"));
                 if let Some(msgsvc) = &self.msgsvc {
-                    let mut rt = tokio::runtime::Runtime::new().unwrap();
                     if let Some(locsvc) = &self.locsvc {
-                        iplist = newip
-                            .iter()
-                            .map(|ip| {
-                                let mut ipstr = ip.to_string();
-                                match rt.block_on(locsvc.lock().unwrap().get(ip)) {
-                                    Ok(loc) => ipstr = format!("{}({})", ipstr, loc),
-                                    Err(err) => error!("获取 {} 的位置失败: {}", ipstr, err),
-                                }
-                                ipstr
-                            })
-                            .collect();
+                         for (i, ip) in newip.iter().enumerate() {
+                            let mut ipstr = ip.to_string();
+                            match locsvc.lock().unwrap().get(ip).await {
+                                Ok(loc) => ipstr = format!("{}({})", ipstr, loc),
+                                Err(err) => error!("获取 {} 的位置失败: {}", ipstr, err),
+                            };
+                            iplist[i] = ipstr;
+                        }
                     }
-                    if let Err(err) = rt.block_on(msgsvc.send(&iplist.join("; "))) {
+                    if let Err(err) = msgsvc.send(&iplist.join("; ")).await {
                         error!("发送消息失败: {}", err);
                     }
                 }
