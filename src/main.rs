@@ -1,7 +1,6 @@
 extern crate actix_rt;
 extern crate actix_web;
 extern crate env_logger;
-extern crate tokio;
 #[macro_use]
 extern crate log;
 
@@ -22,10 +21,11 @@ struct MyAppData {
     allow_proxy: bool
 }
 
-fn main() {
+#[actix_rt::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
-    let cfg = config::load_config().unwrap();
+    let cfg = config::load_config()?;
 
     if cfg.listen.allow_proxy {
         warn!("已开启代理支持，请注意防范远程地址伪造");
@@ -73,10 +73,11 @@ fn main() {
     })
     .workers(1);
     for i in cfg.listen.urls.iter() {
-        s = s.bind(i).unwrap();
+        s = s.bind(i)?;
     }
+    s.run().await?;
 
-    actix_rt::System::new("").block_on(s.run()).unwrap();
+    Ok(())
 }
 
 async fn get(req: HttpRequest) -> impl Responder {
@@ -120,7 +121,7 @@ async fn post(
             }
         }
     } else {
-        if let Some(addr) = req.peer_addr() {
+        if let Some(ref addr) = req.peer_addr() {
             ip = Some(addr.ip())
         }
     }
