@@ -46,7 +46,7 @@ impl WhiteListService {
         };
         WhiteListService {
             handle: Some(thread::spawn(move || {
-                let mut rt = tokio::runtime::Runtime::new().unwrap();
+                let mut rt = actix_rt::Runtime::new().unwrap();
                 rt.block_on(async move {
                     // 启动时写出一个空配置
                     inner.on_list_changed(&vec![]);
