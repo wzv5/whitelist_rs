@@ -1,6 +1,3 @@
-extern crate reqwest;
-extern crate url;
-
 #[derive(Clone)]
 pub struct MessageServiceConfig {
     pub bark: String,

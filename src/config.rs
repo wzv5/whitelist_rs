@@ -1,7 +1,5 @@
-extern crate serde;
-
 use serde::Deserialize;
-use std::{path, env};
+use std::{env, path};
 
 fn find_config() -> Option<path::PathBuf> {
     // 1. 使用环境变量指定的配置文件
@@ -61,7 +59,7 @@ pub(crate) struct ListenConfig {
     pub path: String,
 
     #[serde(default = "default_allow_proxy")]
-    pub allow_proxy: bool
+    pub allow_proxy: bool,
 }
 
 fn default_allow_proxy() -> bool {
@@ -90,7 +88,7 @@ pub(crate) struct WhiteListConfig {
     pub ipv4_prefixlen: u8,
 
     #[serde(default)]
-    pub ipv6_prefixlen: u8
+    pub ipv6_prefixlen: u8,
 }
 
 fn default_remote_addr_var() -> String {

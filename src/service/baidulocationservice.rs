@@ -1,9 +1,5 @@
 use std::sync::Mutex;
 
-extern crate lru_time_cache;
-extern crate reqwest;
-extern crate serde_json;
-
 #[derive(Clone)]
 pub struct BaiduLocationServiceConfig {
     pub ak: String,

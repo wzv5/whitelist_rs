@@ -1,5 +1,3 @@
-extern crate tokio;
-
 use super::{BaiduLocationService, MessageService};
 use std::{
     collections::HashMap,

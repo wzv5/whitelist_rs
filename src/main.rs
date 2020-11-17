@@ -1,6 +1,3 @@
-extern crate actix_rt;
-extern crate actix_web;
-extern crate env_logger;
 #[macro_use]
 extern crate log;
 
@@ -18,7 +15,7 @@ use std::{
 struct MyAppData {
     service: Mutex<WhiteListService>,
     token: String,
-    allow_proxy: bool
+    allow_proxy: bool,
 }
 
 #[actix_rt::main]
@@ -39,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         timeout: Duration::from_secs(cfg.whitelist.timeout.into()),
         loop_delay: Duration::from_secs(cfg.whitelist.loop_delay.into()),
         ipv4_prefixlen: cfg.whitelist.ipv4_prefixlen,
-        ipv6_prefixlen: cfg.whitelist.ipv6_prefixlen
+        ipv6_prefixlen: cfg.whitelist.ipv6_prefixlen,
     };
     let mut msgsvc: Option<Arc<MessageService>> = None;
     let mut locsvc: Option<Arc<BaiduLocationService>> = None;
@@ -59,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let appdata = web::Data::new(MyAppData {
         service: Mutex::new(WhiteListService::new(listcfg, msgsvc, locsvc)),
         token: cfg.whitelist.token,
-        allow_proxy: cfg.listen.allow_proxy
+        allow_proxy: cfg.listen.allow_proxy,
     });
     let listen_path = cfg.listen.path;
 
