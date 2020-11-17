@@ -26,7 +26,7 @@ impl BaiduLocationService {
         }
     }
 
-    pub async fn get(&mut self, ip: &std::net::IpAddr) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn get(&self, ip: &std::net::IpAddr) -> Result<String, Box<dyn std::error::Error>> {
         if !ip.is_ipv4() || self.config.ak.is_empty() || self.config.referrer.is_empty() {
             return Err("参数错误".into());
         }

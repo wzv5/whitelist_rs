@@ -4,7 +4,7 @@ use super::{BaiduLocationService, MessageService};
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
-    sync::{mpsc, Arc, Mutex},
+    sync::{mpsc, Arc},
     thread,
     time::{Duration, Instant},
 };
@@ -35,7 +35,7 @@ impl WhiteListService {
     pub fn new(
         config: WhiteListServiceConfig,
         msgsvc: Option<Arc<MessageService>>,
-        locsvc: Option<Arc<Mutex<BaiduLocationService>>>,
+        locsvc: Option<Arc<BaiduLocationService>>,
     ) -> Self {
         let (s, r) = mpsc::channel::<Message>();
         let mut inner = WhiteListServiceImpl {
@@ -83,7 +83,7 @@ struct WhiteListServiceImpl {
     last_list: Vec<IpAddr>,
     receiver: mpsc::Receiver<Message>,
     msgsvc: Option<Arc<MessageService>>,
-    locsvc: Option<Arc<Mutex<BaiduLocationService>>>,
+    locsvc: Option<Arc<BaiduLocationService>>,
 }
 
 impl WhiteListServiceImpl {
@@ -124,9 +124,9 @@ impl WhiteListServiceImpl {
                 debug!("新增 IP: \n\t{}", iplist.join("\n\t"));
                 if let Some(msgsvc) = &self.msgsvc {
                     if let Some(locsvc) = &self.locsvc {
-                         for (i, ip) in newip.iter().enumerate() {
+                        for (i, ip) in newip.iter().enumerate() {
                             let mut ipstr = ip.to_string();
-                            match locsvc.lock().unwrap().get(ip).await {
+                            match locsvc.get(ip).await {
                                 Ok(loc) => ipstr = format!("{}({})", ipstr, loc),
                                 Err(err) => error!("获取 {} 的位置失败: {}", ipstr, err),
                             };

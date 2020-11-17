@@ -42,19 +42,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ipv6_prefixlen: cfg.whitelist.ipv6_prefixlen
     };
     let mut msgsvc: Option<Arc<MessageService>> = None;
-    let mut locsvc: Option<Arc<Mutex<BaiduLocationService>>> = None;
+    let mut locsvc: Option<Arc<BaiduLocationService>> = None;
     if !cfg.message.bark.is_empty() {
         msgsvc = Some(Arc::new(MessageService::new(MessageServiceConfig {
             bark: cfg.message.bark,
         })));
     }
     if !cfg.baidu_location.ak.is_empty() && !cfg.baidu_location.referrer.is_empty() {
-        locsvc = Some(Arc::new(Mutex::new(BaiduLocationService::new(
+        locsvc = Some(Arc::new(BaiduLocationService::new(
             BaiduLocationServiceConfig {
                 ak: cfg.baidu_location.ak,
                 referrer: cfg.baidu_location.referrer,
             },
-        ))))
+        )))
     }
     let appdata = web::Data::new(MyAppData {
         service: Mutex::new(WhiteListService::new(listcfg, msgsvc, locsvc)),
