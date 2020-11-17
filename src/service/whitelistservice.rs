@@ -3,7 +3,6 @@ use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     sync::{mpsc, Arc},
-    thread,
     time::{Duration, Instant},
 };
 
@@ -25,8 +24,7 @@ enum Message {
 }
 
 pub struct WhiteListService {
-    handle: Option<thread::JoinHandle<()>>,
-    sender: mpsc::Sender<Message>,
+    sender: Option<mpsc::Sender<Message>>,
 }
 
 impl WhiteListService {
@@ -44,28 +42,20 @@ impl WhiteListService {
             msgsvc,
             locsvc,
         };
-        WhiteListService {
-            handle: Some(thread::spawn(move || {
-                let mut rt = actix_rt::Runtime::new().unwrap();
-                rt.block_on(async move {
-                    // 启动时写出一个空配置
-                    inner.on_list_changed(&vec![]);
-                    inner.run().await;
-                });
-            })),
-            sender: s,
-        }
+        actix_rt::spawn(async move {
+            // 启动时写出一个空配置
+            inner.on_list_changed(&vec![]);
+            inner.run().await;
+        });
+        WhiteListService { sender: Some(s) }
     }
 
     pub fn push(&mut self, ip: IpAddr) {
-        self.sender.send(Message::Push(ip)).unwrap();
+        self.sender.as_ref().unwrap().send(Message::Push(ip)).unwrap();
     }
 
     pub fn stop(&mut self) {
-        if let Some(handle) = self.handle.take() {
-            self.sender.send(Message::Terminate).unwrap();
-            handle.join().unwrap();
-        }
+        self.sender.take().unwrap().send(Message::Terminate).unwrap();
     }
 }
 
@@ -87,7 +77,7 @@ struct WhiteListServiceImpl {
 impl WhiteListServiceImpl {
     async fn run(&mut self) {
         loop {
-            thread::sleep(self.config.loop_delay);
+            actix_rt::time::delay_for(self.config.loop_delay).await;
             while let Ok(msg) = self.receiver.try_recv() {
                 match msg {
                     Message::Terminate => return,
