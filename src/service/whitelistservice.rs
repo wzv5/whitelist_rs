@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::{BaiduLocationService, MessageService};
 use std::{
     collections::HashMap,
@@ -51,17 +53,27 @@ impl WhiteListService {
     }
 
     pub fn push(&mut self, ip: IpAddr) {
-        self.sender.as_ref().unwrap().send(Message::Push(ip)).unwrap();
+        self.sender
+            .as_ref()
+            .unwrap()
+            .send(Message::Push(ip))
+            .unwrap();
     }
 
     pub fn stop(&mut self) {
-        self.sender.take().unwrap().send(Message::Terminate).unwrap();
+        self.sender
+            .take()
+            .unwrap()
+            .send(Message::Terminate)
+            .unwrap();
     }
 }
 
 impl Drop for WhiteListService {
     fn drop(&mut self) {
-        self.stop();
+        if let Some(sender) = self.sender.as_ref() {
+            sender.send(Message::Terminate).unwrap();
+        }
     }
 }
 
