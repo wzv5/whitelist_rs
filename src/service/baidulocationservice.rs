@@ -1,4 +1,5 @@
-use std::sync::Mutex;
+use crate::Result;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct BaiduLocationServiceConfig {
@@ -8,26 +9,27 @@ pub struct BaiduLocationServiceConfig {
 
 pub struct BaiduLocationService {
     config: BaiduLocationServiceConfig,
-    cache: Mutex<lru_time_cache::LruCache<std::net::IpAddr, String>>,
+    cache: Arc<Mutex<lru_time_cache::LruCache<std::net::IpAddr, String>>>,
 }
 
 impl BaiduLocationService {
     pub fn new(config: BaiduLocationServiceConfig) -> Self {
         BaiduLocationService {
             config,
-            cache: Mutex::new(lru_time_cache::LruCache::with_expiry_duration_and_capacity(
-                std::time::Duration::from_secs(24 * 60 * 60),
-                100,
+            cache: Arc::new(Mutex::new(
+                lru_time_cache::LruCache::with_expiry_duration_and_capacity(
+                    std::time::Duration::from_secs(24 * 60 * 60),
+                    100,
+                ),
             )),
         }
     }
 
-    pub async fn get(&self, ip: &std::net::IpAddr) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn get(&self, ip: &std::net::IpAddr) -> Result<String> {
         if !ip.is_ipv4() || self.config.ak.is_empty() || self.config.referrer.is_empty() {
             return Err("参数错误".into());
         }
-        let mut cache = self.cache.lock().unwrap();
-        if let Some(addr) = cache.get(ip) {
+        if let Some(addr) = self.cache.lock().unwrap().get(ip) {
             debug!("从缓存获取 {} 的位置为 {}", ip, addr);
             return Ok(addr.into());
         }
@@ -42,7 +44,7 @@ impl BaiduLocationService {
         if data["status"].as_i64() == Some(0) {
             if let Some(addr) = data["content"]["address"].as_str() {
                 debug!("联网获取 {} 的位置为 {}", ip, addr);
-                cache.insert(ip.clone(), addr.into());
+                self.cache.lock().unwrap().insert(ip.clone(), addr.into());
                 return Ok(addr.into());
             }
         }

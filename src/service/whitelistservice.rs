@@ -4,7 +4,7 @@ use super::{BaiduLocationService, MessageService};
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
-    sync::{mpsc, Arc},
+    sync::mpsc,
     time::{Duration, Instant},
 };
 
@@ -32,8 +32,8 @@ pub struct WhiteListService {
 impl WhiteListService {
     pub fn new(
         config: WhiteListServiceConfig,
-        msgsvc: Option<Arc<MessageService>>,
-        locsvc: Option<Arc<BaiduLocationService>>,
+        msgsvc: Option<MessageService>,
+        locsvc: Option<BaiduLocationService>,
     ) -> Self {
         let (s, r) = mpsc::channel::<Message>();
         let mut inner = WhiteListServiceImpl {
@@ -44,7 +44,7 @@ impl WhiteListService {
             msgsvc,
             locsvc,
         };
-        actix_rt::spawn(async move {
+        tokio::spawn(async move {
             // 启动时写出一个空配置
             inner.on_list_changed(&vec![]);
             inner.run().await;
@@ -82,14 +82,14 @@ struct WhiteListServiceImpl {
     list: HashMap<IpAddr, Instant>,
     last_list: Vec<IpAddr>,
     receiver: mpsc::Receiver<Message>,
-    msgsvc: Option<Arc<MessageService>>,
-    locsvc: Option<Arc<BaiduLocationService>>,
+    msgsvc: Option<MessageService>,
+    locsvc: Option<BaiduLocationService>,
 }
 
 impl WhiteListServiceImpl {
     async fn run(&mut self) {
         loop {
-            actix_rt::time::delay_for(self.config.loop_delay).await;
+            tokio::time::sleep(self.config.loop_delay).await;
             while let Ok(msg) = self.receiver.try_recv() {
                 match msg {
                     Message::Terminate => return,

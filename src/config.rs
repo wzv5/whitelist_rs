@@ -1,3 +1,4 @@
+use crate::Result;
 use serde::Deserialize;
 use std::{env, path};
 
@@ -28,7 +29,7 @@ fn find_config() -> Option<path::PathBuf> {
     None
 }
 
-pub(crate) fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
+pub(crate) fn load_config() -> Result<Config> {
     let p = find_config();
     if p.is_none() {
         return Err("找不到配置文件".into());
