@@ -33,14 +33,13 @@ impl BaiduLocationService {
             debug!("从缓存获取 {} 的位置为 {}", ip, addr);
             return Ok(addr.into());
         }
-        let client = reqwest::Client::new();
-        let req = client
-            .get("https://api.map.baidu.com/location/ip")
-            .header("Referer", &self.config.referrer)
-            .query(&[("ak", &self.config.ak), ("ip", &ip.to_string())])
-            .timeout(std::time::Duration::from_secs(15));
-        let resp = req.send().await?;
-        let data: serde_json::Value = serde_json::from_str(&resp.text().await?)?;
+        let resp = ureq::get("https://api.map.baidu.com/location/ip")
+            .set("Referer", &self.config.referrer)
+            .query("ak", &self.config.ak)
+            .query("ip", &ip.to_string())
+            .timeout(std::time::Duration::from_secs(15))
+            .call()?;
+        let data: serde_json::Value = serde_json::from_str(&resp.into_string()?)?;
         if data["status"].as_i64() == Some(0) {
             if let Some(addr) = data["content"]["address"].as_str() {
                 debug!("联网获取 {} 的位置为 {}", ip, addr);

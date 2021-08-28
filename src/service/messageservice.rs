@@ -22,15 +22,12 @@ impl MessageService {
             self.config.bark,
             url::form_urlencoded::byte_serialize(msg.as_bytes()).collect::<String>()
         );
-        let client = reqwest::Client::new();
-        let resp = client
-            .get(&url)
+        let resp = ureq::get(&url)
             .timeout(std::time::Duration::from_secs(15))
-            .send()
-            .await?;
+            .call()?;
         let status = resp.status();
-        if !status.is_success() {
-            return Err(status.as_str().into());
+        if status != 200 {
+            return Err(resp.status_text().into());
         }
         Ok(())
     }
