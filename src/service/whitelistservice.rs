@@ -46,7 +46,7 @@ impl WhiteListService {
         };
         tokio::spawn(async move {
             // 启动时写出一个空配置
-            inner.on_list_changed(&vec![]);
+            inner.on_list_changed(&[]);
             inner.run().await;
         });
         WhiteListService { sender: Some(s) }
@@ -118,8 +118,8 @@ impl WhiteListServiceImpl {
             .filter(|ip| !curlist.contains(ip))
             .cloned()
             .collect();
-        if newip.len() > 0 || delip.len() > 0 {
-            if newip.len() > 0 {
+        if !newip.is_empty() || !delip.is_empty() {
+            if !newip.is_empty() {
                 let mut iplist = ipvec_to_strvec(&newip);
                 debug!("新增 IP: \n\t{}", iplist.join("\n\t"));
                 if let Some(msgsvc) = &self.msgsvc {
@@ -138,7 +138,7 @@ impl WhiteListServiceImpl {
                     }
                 }
             }
-            if delip.len() > 0 {
+            if !delip.is_empty() {
                 debug!(
                     "删除 IP: \n\t{}",
                     delip
@@ -153,9 +153,9 @@ impl WhiteListServiceImpl {
         }
     }
 
-    fn on_list_changed(&self, list: &Vec<IpAddr>) {
+    fn on_list_changed(&self, list: &[IpAddr]) {
         let list = self.ipvec_with_prefix(list);
-        if list.len() > 0 {
+        if !list.is_empty() {
             info!("当前列表:\n\t{}", list.join("\n\t"));
         } else {
             info!("当前列表: 【空】");
@@ -217,7 +217,7 @@ impl WhiteListServiceImpl {
         info!("已刷新配置");
     }
 
-    fn ipvec_with_prefix(&self, v: &Vec<IpAddr>) -> Vec<String> {
+    fn ipvec_with_prefix(&self, v: &[IpAddr]) -> Vec<String> {
         v.iter()
             .map(|ip| match ip {
                 IpAddr::V4(ip) => ipv4_to_cidr(ip, self.config.ipv4_prefixlen),
@@ -227,7 +227,7 @@ impl WhiteListServiceImpl {
     }
 }
 
-fn ipvec_to_strvec(v: &Vec<IpAddr>) -> Vec<String> {
+fn ipvec_to_strvec(v: &[IpAddr]) -> Vec<String> {
     v.iter().map(|ip| ip.to_string()).collect()
 }
 

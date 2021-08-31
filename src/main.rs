@@ -5,7 +5,7 @@ mod config;
 mod service;
 
 use bytes::Buf;
-use futures_util::{future, FutureExt};
+use futures_util::{future, FutureExt, TryFutureExt};
 use hyper::{Body, Method, Request, Response, StatusCode};
 use service::*;
 use std::{
@@ -25,8 +25,13 @@ struct MyAppData {
     path: String,
 }
 
+const APP_NAME: &str = env!("CARGO_PKG_NAME");
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", format!("info,{}=debug", APP_NAME));
+    }
     env_logger::init();
 
     let cfg = config::load_config()?;
@@ -90,7 +95,10 @@ async fn listen_http(ctx: Arc<MyAppData>, addr: SocketAddr) -> Result<()> {
                 let ctx = ctx.clone();
                 async move {
                     Ok::<_, Error>(hyper::service::service_fn(move |req| {
-                        process_http(ctx.clone(), req, remote_addr)
+                        process_http(ctx.clone(), req, remote_addr).map_err(|err| {
+                            error!("{}", err);
+                            err
+                        })
                     }))
                 }
             },
@@ -125,9 +133,9 @@ async fn process_http(
             .status(StatusCode::NOT_FOUND)
             .body(Body::empty())?);
     }
-    let (status, body) = match req.method() {
-        &Method::GET => (StatusCode::OK, Body::from(get())),
-        &Method::POST => post(ctx, req, ip).await?,
+    let (status, body) = match *req.method() {
+        Method::GET => (StatusCode::OK, Body::from(get())),
+        Method::POST => post(ctx, req, ip).await?,
         _ => (StatusCode::METHOD_NOT_ALLOWED, Body::empty()),
     };
     Ok(Response::builder()
@@ -161,11 +169,8 @@ async fn post(
     mut req: Request<Body>,
     ip: IpAddr,
 ) -> Result<(StatusCode, Body)> {
-    let ctok = match req.headers().get(hyper::header::CONTENT_TYPE) {
-        Some(ct) => ct == "application/x-www-form-urlencoded",
-        None => false,
-    };
-    if !ctok {
+    if !matches!(req.headers().get(hyper::header::CONTENT_TYPE), Some(ct) if ct == "application/x-www-form-urlencoded")
+    {
         return Ok((StatusCode::BAD_REQUEST, Body::empty()));
     }
     let body = hyper::body::aggregate(req.body_mut()).await?;
@@ -186,9 +191,9 @@ fn get_remote_ip(req: &Request<Body>, remote_addr: &SocketAddr, allow_proxy: boo
         if let Some(f) = req.headers().get("X-Forwarded-For") {
             if let Ok(f) = f.to_str() {
                 let addr = if let Some((f, _)) = f.split_once(",") {
-                    f
+                    f.trim()
                 } else {
-                    f
+                    f.trim()
                 };
                 if let Ok(addr) = addr.parse::<IpAddr>() {
                     ip = Some(addr);

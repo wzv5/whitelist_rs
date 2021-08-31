@@ -43,10 +43,10 @@ impl BaiduLocationService {
         if data["status"].as_i64() == Some(0) {
             if let Some(addr) = data["content"]["address"].as_str() {
                 debug!("联网获取 {} 的位置为 {}", ip, addr);
-                self.cache.lock().unwrap().insert(ip.clone(), addr.into());
+                self.cache.lock().unwrap().insert(*ip, addr.into());
                 return Ok(addr.into());
             }
         }
-        return Err("解析结果失败".into());
+        Err("解析结果失败".into())
     }
 }
