@@ -49,6 +49,7 @@ async fn main() -> Result<()> {
         loop_delay: Duration::from_secs(cfg.whitelist.loop_delay.into()),
         ipv4_prefixlen: cfg.whitelist.ipv4_prefixlen,
         ipv6_prefixlen: cfg.whitelist.ipv6_prefixlen,
+        preset: cfg.whitelist.preset,
     };
     let mut msgsvc: Option<MessageService> = None;
     let mut locsvc: Option<BaiduLocationService> = None;

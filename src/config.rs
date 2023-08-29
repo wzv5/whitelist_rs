@@ -90,6 +90,9 @@ pub(crate) struct WhiteListConfig {
 
     #[serde(default)]
     pub ipv6_prefixlen: u8,
+
+    #[serde(default)]
+    pub preset: Vec<String>,
 }
 
 fn default_remote_addr_var() -> String {

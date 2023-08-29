@@ -18,6 +18,7 @@ pub struct WhiteListServiceConfig {
     pub loop_delay: Duration,
     pub ipv4_prefixlen: u8,
     pub ipv6_prefixlen: u8,
+    pub preset: Vec<String>,
 }
 
 enum Message {
@@ -167,6 +168,9 @@ impl WhiteListServiceImpl {
             self.config.remote_addr_var, self.config.result_var
         ));
         s.push_str("default 0;\n");
+        for i in &self.config.preset {
+            s.push_str(&format!("{} 1;\n", i));
+        }
         for i in list {
             s.push_str(&format!("{} 1;\n", i));
         }

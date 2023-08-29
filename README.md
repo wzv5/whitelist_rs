@@ -54,7 +54,11 @@
         "timeout": 3600,
         "loop_delay": 15,
         "ipv4_prefixlen": 0,
-        "ipv6_prefixlen": 0
+        "ipv6_prefixlen": 0,
+        "preset": [
+            "127.0.0.0/8",
+            "192.168.1.1"
+        ]
     },
     "message": {
         "bark": ""
@@ -75,9 +79,10 @@
 5. `loop_delay`：多久检查一次列表，为了避免频繁重载 nginx 配置，提交成功和过期都不是实时的，默认为 `15`
 6. `ipv4_prefixlen`：成功提交后，把该范围内的 IP 都加入白名单，默认为 `0`，等同于 `32`
 7. `ipv6_prefixlen`：同上
-8. `bark`：消息通知接口，不含最后的 `/`
-9. `ak`：百度地图 API，用于获取 IP 的地理位置，仅在设置了 `bark` 、发送消息时使用
-10. `referrer`：调用百度地图 API 时的 referrer，参见百度地图 API 文档的来源白名单
+8. `preset`：预置的白名单，始终会包含这些 IP 或 IP 段
+9. `bark`：消息通知接口，不含最后的 `/`
+10. `ak`：百度地图 API，用于获取 IP 的地理位置，仅在设置了 `bark` 、发送消息时使用
+11. `referrer`：调用百度地图 API 时的 referrer，参见百度地图 API 文档的来源白名单
 
 ## 开启日志
 
